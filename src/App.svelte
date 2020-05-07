@@ -103,14 +103,6 @@
 </script>
 
 <style>
-  body {
-    background-color: #fafafa;
-  }
-
-  #app {
-    padding: 25px;
-  }
-
   .settings {
     top: 20px;
     right: 20px;
