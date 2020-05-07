@@ -1,7 +1,8 @@
 <script>
   import { onMount } from "svelte";
+  let db = null;
   let displaySettings = false;
-  let accountKey = "";
+  let accountKey = "test";
   let keyword = "";
   let displayAll = false;
   let items = [];
@@ -36,7 +37,7 @@
     return true;
   };
   function add(e) {
-    let name = this.keyword.trim();
+    let name = keyword.trim();
     let isSection = false;
     if (name.startsWith("#")) {
       name = name.substring(1);
@@ -45,25 +46,24 @@
 
     const li = e.target.closest("li");
     const sectionIndex = li.getAttribute("data-index");
-    let nextSectionIndex = this.items.findIndex(
+    let nextSectionIndex = items.findIndex(
       (i, index) => i.section && index > sectionIndex
     );
-    nextSectionIndex =
-      nextSectionIndex > 0 ? nextSectionIndex : this.items.length;
-    this.items.splice(nextSectionIndex, 0, {
+    nextSectionIndex = nextSectionIndex > 0 ? nextSectionIndex : items.length;
+    items.splice(nextSectionIndex, 0, {
       name: name,
       checked: false,
       section: isSection
     });
-    save(this.accountKey, this.items);
-    this.clear();
+    save(accountKey, items);
+    clear();
   }
   function remove(index) {
-    this.items.splice(index, 1);
-    save(this.accountKey, this.items);
+    items.splice(index, 1);
+    save(accountKey, items);
   }
   function clear() {
-    this.keyword = "";
+    keyword = "";
     document
       .querySelector(".action-bar>.mdl-textfield")
       .MaterialTextfield.change();
@@ -80,13 +80,22 @@
   };
 
   const collectionId = "lists";
-  const docId = "test";
+
+  function save(docId, value) {
+    db.collection(collectionId)
+      .doc(docId)
+      .set({ value })
+      .catch(function(error) {
+        console.error("Error writing document: ", error);
+      });
+  }
 
   onMount(() => {
+    registerTouchActions();
     window.addEventListener("load", event => {
       firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const docRef = db.collection(collectionId).doc(docId);
+      db = firebase.firestore();
+      const docRef = db.collection(collectionId).doc(accountKey);
       docRef.onSnapshot(function(doc) {
         if (doc.exists) {
           const value = doc.data().value || [
@@ -100,9 +109,104 @@
       });
     });
   });
+  function registerTouchActions() {
+    const CHECK_DISTANCE = 100;
+    const DISPLAY_CHECK_DISTANCE = 25;
+    let li = null;
+    let item = null;
+    let itemIndex = null;
+    let startPosX = null;
+    let isSwipe = false;
+    let hoverLi = null;
+
+    const list = document.querySelector("ul");
+    list.addEventListener("touchstart", handleStart);
+    list.addEventListener("touchend", handleEnd);
+    list.addEventListener("touchmove", handleMove);
+
+    function handleStart(e) {
+      const target = e.target;
+      li = target.closest("li");
+      itemIndex = li.getAttribute("data-index");
+      item = items[itemIndex];
+      if (target.innerText == "swap_vert") {
+        isSwipe = false;
+      } else {
+        isSwipe = true;
+        startPosX = e.targetTouches[0].clientX;
+      }
+    }
+
+    function handleMove(e) {
+      if (isSwipe && !item.section) {
+        const deltaX = e.changedTouches[0].clientX - startPosX;
+
+        const hasDisplayDistance = deltaX > DISPLAY_CHECK_DISTANCE;
+        li.classList.toggle("display-check", hasDisplayDistance);
+        li.style.marginLeft = hasDisplayDistance ? deltaX + "px" : "0px";
+
+        const checked = item.checked;
+        const hasCheckDistance = deltaX > CHECK_DISTANCE;
+
+        li.classList.toggle(
+          "checked",
+          (!checked && hasCheckDistance) || (checked && !hasCheckDistance)
+        );
+      } else if (!isSwipe) {
+        const element = document.elementFromPoint(
+          e.changedTouches[0].clientX,
+          e.changedTouches[0].clientY
+        );
+        const newHoverLi = element && element.closest("li");
+        if (newHoverLi && newHoverLi != hoverLi) {
+          if (hoverLi != null) {
+            hoverLi.classList.remove("sort-hover");
+          }
+          hoverLi = newHoverLi;
+          hoverLi.classList.add("sort-hover");
+        }
+      }
+    }
+
+    function handleEnd(e) {
+      if (isSwipe) {
+        const deltaX = e.changedTouches[0].clientX - startPosX;
+
+        if (deltaX < -CHECK_DISTANCE) {
+          item.hover = !item.hover;
+        } else if (!item.section) {
+          if (deltaX > CHECK_DISTANCE) {
+            item.checked = !item.checked;
+            save(accountKey, items);
+            clear();
+          }
+
+          li.classList.remove("display-check", "checked");
+          li.style.marginLeft = "0px";
+        }
+      } else if (hoverLi != null) {
+        let destinationIndex = parseInt(hoverLi.getAttribute("data-index"));
+
+        if (destinationIndex < itemIndex) {
+          destinationIndex++;
+        }
+
+        hoverLi.classList.remove("sort-hover");
+        hoverLi = null;
+
+        item.hover = !item.hover;
+        items.splice(destinationIndex, 0, items.splice(itemIndex, 1)[0]);
+
+        save(accountKey, items);
+      }
+    }
+  }
 </script>
 
 <style>
+  #app {
+    padding: 25px;
+  }
   .settings {
     top: 20px;
     right: 20px;
@@ -177,75 +281,79 @@
 
   </script>
 </svelte:head>
-<ul class="mdl-list">
-  {#each items as item, i}
-    {#if isVisible(item)}
-      <li
-        data-index="items.indexOf(item)"
-        class="mdl-list__item"
-        class:section={item.section}
-        class:item={!item.section}
-        class:checked={item.checked}>
-        <span class="mdl-list__item-primary-content">
-          {#if !item.section}
-            <div class="check-indicator">
-              <i class="material-icons check-indicator-uncheck">
-                check_box_outline_blank
-              </i>
-              <i class="material-icons check-indicator-checked">check_box</i>
+<div id="app">
+  <ul class="mdl-list">
+    {#each items as item, i}
+      {#if isVisible(item)}
+        <li
+          data-index={i}
+          class="mdl-list__item"
+          class:section={item.section}
+          class:item={!item.section}
+          class:checked={item.checked}>
+          <span class="mdl-list__item-primary-content">
+            {#if !item.section}
+              <div class="check-indicator">
+                <i class="material-icons check-indicator-uncheck">
+                  check_box_outline_blank
+                </i>
+                <i class="material-icons check-indicator-checked">check_box</i>
+              </div>
+            {/if}
+            <div class="item-content">
+              {#if item.hover}
+                <i class="mdl-icon-toggle__label material-icons button-sort">
+                  swap_vert
+                </i>
+              {/if}
+              <span>{item.name}</span>
+              {#if item.section && keyword.length}
+                <button
+                  on:click={add}
+                  class="mdl-button mdl-js-button mdl-button--fab
+                  mdl-button--mini-fab mdl-button--colored">
+                  <i class="material-icons">add</i>
+                </button>
+              {/if}
+              {#if item.hover}
+                <button
+                  on:click={remove(items.indexOf(item))}
+                  class="mdl-button mdl-js-button mdl-button--icon
+                  mdl-button--colored button-delete">
+                  <i class="material-icons">delete</i>
+                </button>
+              {/if}
             </div>
-          {/if}
-          <div class="item-content">
-            {#if item.hover}
-              <i class="mdl-icon-toggle__label material-icons button-sort">
-                swap_vert
-              </i>
-            {/if}
-            <span>{item.name}</span>
-            {#if item.section && keyword.length}
-              <button
-                on:click={add}
-                class="mdl-button mdl-js-button mdl-button--fab
-                mdl-button--mini-fab mdl-button--colored">
-                <i class="material-icons">add</i>
-              </button>
-            {/if}
-            {#if item.hover}
-              <button
-                on:click={remove(items.indexOf(item))}
-                class="mdl-button mdl-js-button mdl-button--icon
-                mdl-button--colored button-delete">
-                <i class="material-icons">delete</i>
-              </button>
-            {/if}
-          </div>
-        </span>
-      </li>
-    {/if}
-  {/each}
-  <div class="action-bar">
-    <div class="mdl-textfield mdl-js-textfield">
-      <input
-        class="mdl-textfield__input"
-        type="text"
-        id="keyword"
-        bind:value={keyword} />
-      <label class="mdl-textfield__label" for="keyword">
-        Item or #Section...
+          </span>
+        </li>
+      {/if}
+    {/each}
+    <div class="action-bar">
+      <div class="mdl-textfield mdl-js-textfield">
+        <input
+          class="mdl-textfield__input"
+          type="text"
+          id="keyword"
+          bind:value={keyword} />
+        <label class="mdl-textfield__label" for="keyword">
+          Item or #Section...
+        </label>
+      </div>
+      <button
+        on:click={clear}
+        class="mdl-button mdl-js-button mdl-button--icon">
+        <i class="material-icons">clear</i>
+      </button>
+      <label
+        class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
+        for="visibility">
+        <input
+          type="checkbox"
+          id="visibility"
+          class="mdl-icon-toggle__input"
+          bind:checked={displayAll} />
+        <i class="mdl-icon-toggle__label material-icons">visibility</i>
       </label>
     </div>
-    <button on:click={clear} class="mdl-button mdl-js-button mdl-button--icon">
-      <i class="material-icons">clear</i>
-    </button>
-    <label
-      class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
-      for="visibility">
-      <input
-        type="checkbox"
-        id="visibility"
-        class="mdl-icon-toggle__input"
-        bind:checked={displayAll} />
-      <i class="mdl-icon-toggle__label material-icons">visibility</i>
-    </label>
-  </div>
-</ul>
+  </ul>
+</div>
