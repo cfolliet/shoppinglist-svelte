@@ -241,15 +241,15 @@
     left: 60px;
   }
 
-  .display-check .check-indicator,
-  .display-check .check-indicator-uncheck,
-  .checked.display-check .check-indicator-checked {
+  .display-check div .check-indicator,
+  .display-check div .check-indicator-uncheck,
+  .checked.display-check div .check-indicator-checked {
     display: inline;
   }
 
   .check-indicator-uncheck,
   .check-indicator-checked,
-  .checked .check-indicator-uncheck {
+  .checked div .check-indicator-uncheck {
     display: none;
   }
 
