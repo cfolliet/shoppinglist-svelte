@@ -10,7 +10,16 @@
     if (keyword.length > 0) {
       return (
         item.section ||
-        item.name.toLowerCase().indexOf(keyword.toLowerCase()) > -1
+        item.name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .indexOf(
+            keyword
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+          ) > -1
       );
     }
 
@@ -38,7 +47,17 @@
   };
   function onKeywordChange() {
     const itemIndex = items.findIndex(
-      i => i.name.toLowerCase().indexOf(keyword.toLowerCase()) > -1
+      i =>
+        i.name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .indexOf(
+            keyword
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+          ) > -1
     );
     if (itemIndex >= 0) {
       const element = document.querySelector(
