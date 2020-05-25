@@ -328,32 +328,30 @@
         </li>
       {/if}
     {/each}
-    <div class="action-bar">
-      <div class="mdl-textfield mdl-js-textfield">
-        <input
-          class="mdl-textfield__input"
-          type="text"
-          id="keyword"
-          bind:value={keyword} />
-        <label class="mdl-textfield__label" for="keyword">
-          Item or #Section...
-        </label>
-      </div>
-      <button
-        on:click={clear}
-        class="mdl-button mdl-js-button mdl-button--icon">
-        <i class="material-icons">clear</i>
-      </button>
-      <label
-        class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
-        for="visibility">
-        <input
-          type="checkbox"
-          id="visibility"
-          class="mdl-icon-toggle__input"
-          bind:checked={displayAll} />
-        <i class="mdl-icon-toggle__label material-icons">visibility</i>
+  </ul>
+  <div class="action-bar">
+    <div class="mdl-textfield mdl-js-textfield">
+      <input
+        class="mdl-textfield__input"
+        type="text"
+        id="keyword"
+        bind:value={keyword} />
+      <label class="mdl-textfield__label" for="keyword">
+        Item or #Section...
       </label>
     </div>
-  </ul>
+    <button on:click={clear} class="mdl-button mdl-js-button mdl-button--icon">
+      <i class="material-icons">clear</i>
+    </button>
+    <label
+      class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
+      for="visibility">
+      <input
+        type="checkbox"
+        id="visibility"
+        class="mdl-icon-toggle__input"
+        bind:checked={displayAll} />
+      <i class="mdl-icon-toggle__label material-icons">visibility</i>
+    </label>
+  </div>
 </div>
