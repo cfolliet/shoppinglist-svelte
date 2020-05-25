@@ -36,6 +36,17 @@
 
     return true;
   };
+  function onKeywordChange() {
+    const itemIndex = items.findIndex(
+      i => i.name.toLowerCase().indexOf(keyword.toLowerCase()) > -1
+    );
+    if (itemIndex >= 0) {
+      const element = document.querySelector(
+        "li[data-index='" + itemIndex + "']"
+      );
+      window.scrollTo(0, element.offsetTop);
+    }
+  }
   function add(e) {
     let name = keyword.trim();
     let isSection = false;
@@ -339,7 +350,8 @@
         class="mdl-textfield__input"
         type="text"
         id="keyword"
-        bind:value={keyword} />
+        bind:value={keyword}
+        on:input={onKeywordChange} />
       <label class="mdl-textfield__label" for="keyword">
         Item or #Section...
       </label>
