@@ -258,7 +258,7 @@
     color: rgb(63, 81, 181);
   }
 
-  .sort-hover {
+  :global(.sort-hover) {
     border-bottom: rgb(63, 81, 181) 1px solid;
   }
 
