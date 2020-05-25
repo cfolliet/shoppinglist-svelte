@@ -272,6 +272,9 @@
     bottom: 0px;
     background-color: #fafafa;
   }
+  .action-bar .mdl-textfield {
+    width: 270px;
+  }
 </style>
 
 <svelte:head>
