@@ -174,6 +174,7 @@
 
         if (deltaX < -CHECK_DISTANCE) {
           item.hover = !item.hover;
+          items = items;
         } else if (!item.section) {
           if (deltaX > CHECK_DISTANCE) {
             item.checked = !item.checked;
