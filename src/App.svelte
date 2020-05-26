@@ -168,6 +168,8 @@
     }
 
     function handleMove(e) {
+      e.preventDefault();
+
       if (isSwipe && !item.section) {
         const deltaX = e.changedTouches[0].clientX - startPosX;
 
@@ -183,10 +185,14 @@
           (!checked && hasCheckDistance) || (checked && !hasCheckDistance)
         );
       } else if (!isSwipe) {
-        const element = document.elementFromPoint(
-          e.changedTouches[0].clientX,
-          e.changedTouches[0].clientY
-        );
+        const touch = e.changedTouches[0];
+        const posY = touch.clientY;
+        if (posY < 50) {
+          window.scroll(0, window.scrollY - 10);
+        } else if (e.view.innerHeight - posY < 100) {
+          window.scroll(0, window.scrollY + 10);
+        }
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
         const newHoverLi = element && element.closest("li");
         if (newHoverLi && newHoverLi != hoverLi) {
           if (hoverLi != null) {
