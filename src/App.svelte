@@ -97,6 +97,7 @@
     document
       .querySelector(".action-bar>.mdl-textfield")
       .MaterialTextfield.change();
+    document.getElementById("keyword").blur();
   }
 
   const firebaseConfig = {
@@ -168,8 +169,6 @@
     }
 
     function handleMove(e) {
-      e.preventDefault();
-
       if (isSwipe && !item.section) {
         const deltaX = e.changedTouches[0].clientX - startPosX;
 
@@ -185,6 +184,7 @@
           (!checked && hasCheckDistance) || (checked && !hasCheckDistance)
         );
       } else if (!isSwipe) {
+        e.preventDefault();
         const touch = e.changedTouches[0];
         const posY = touch.clientY;
         if (posY < 50) {
