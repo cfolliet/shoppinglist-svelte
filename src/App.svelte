@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   let db = null;
   let displaySettings = false;
-  let accountKey = "test";
+  let accountKey = localStorage.getItem("accountKey") || "test";
   let keyword = "";
   let displayAll = false;
   let items = [];
@@ -94,9 +94,6 @@
   }
   function clear() {
     keyword = "";
-    document
-      .querySelector(".action-bar>.mdl-textfield")
-      .MaterialTextfield.change();
     document.getElementById("keyword").blur();
   }
 
@@ -119,6 +116,10 @@
       .catch(function(error) {
         console.error("Error writing document: ", error);
       });
+  }
+  function saveSettings() {
+    localStorage.setItem("accountKey", accountKey);
+    window.location.reload();
   }
 
   onMount(() => {
@@ -238,6 +239,10 @@
       }
     }
   }
+
+  function addMaterialDesign(node) {
+    componentHandler.upgradeElement(node);
+  }
 </script>
 
 <style>
@@ -322,77 +327,119 @@
   </script>
 </svelte:head>
 <div id="app">
-  <ul class="mdl-list">
-    {#each items as item, i}
-      {#if isVisible(item)}
-        <li
-          data-index={i}
-          class="mdl-list__item"
-          class:section={item.section}
-          class:item={!item.section}
-          class:checked={item.checked}>
-          <span class="mdl-list__item-primary-content">
-            {#if !item.section}
-              <div class="check-indicator">
-                <i class="material-icons check-indicator-uncheck">
-                  check_box_outline_blank
-                </i>
-                <i class="material-icons check-indicator-checked">check_box</i>
-              </div>
-            {/if}
-            <div class="item-content">
-              {#if item.hover}
-                <i class="mdl-icon-toggle__label material-icons button-sort">
-                  swap_vert
-                </i>
-              {/if}
-              <span>{item.name}</span>
-              {#if item.section && keyword.length}
-                <button
-                  on:click={add}
-                  class="mdl-button mdl-js-button mdl-button--fab
-                  mdl-button--mini-fab mdl-button--colored">
-                  <i class="material-icons">add</i>
-                </button>
-              {/if}
-              {#if item.hover}
-                <button
-                  on:click={remove(items.indexOf(item))}
-                  class="mdl-button mdl-js-button mdl-button--icon
-                  mdl-button--colored button-delete">
-                  <i class="material-icons">delete</i>
-                </button>
-              {/if}
-            </div>
-          </span>
-        </li>
-      {/if}
-    {/each}
-  </ul>
-  <div class="action-bar">
-    <div class="mdl-textfield mdl-js-textfield">
-      <input
-        class="mdl-textfield__input"
-        type="text"
-        id="keyword"
-        bind:value={keyword}
-        on:input={onKeywordChange} />
-      <label class="mdl-textfield__label" for="keyword">
-        Item or #Section...
-      </label>
+  <label
+    class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect settings"
+    for="settings">
+    <input
+      type="checkbox"
+      id="settings"
+      class="mdl-icon-toggle__input"
+      bind:checked={displaySettings} />
+    <i class="mdl-icon-toggle__label material-icons">settings</i>
+  </label>
+  {#if displaySettings}
+    <div id="panel-settings">
+      <div
+        id="testst"
+        class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+        use:addMaterialDesign>
+        <input
+          class="mdl-textfield__input"
+          type="text"
+          id="accountKey"
+          bind:value={accountKey} />
+        <label class="mdl-textfield__label" for="accountKey">
+          Account Key...
+        </label>
+      </div>
+      <button
+        class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+        on:click={saveSettings}>
+        Save
+      </button>
     </div>
-    <button on:click={clear} class="mdl-button mdl-js-button mdl-button--icon">
-      <i class="material-icons">clear</i>
-    </button>
-    <label
-      class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
-      for="visibility">
-      <input
-        type="checkbox"
-        id="visibility"
-        class="mdl-icon-toggle__input"
-        bind:checked={displayAll} />
-      <i class="mdl-icon-toggle__label material-icons">visibility</i>
-    </label>
-  </div>
+  {/if}
+  {#if !displaySettings}
+    <div>
+      <ul class="mdl-list">
+        {#each items as item, i}
+          {#if isVisible(item)}
+            <li
+              data-index={i}
+              class="mdl-list__item"
+              class:section={item.section}
+              class:item={!item.section}
+              class:checked={item.checked}>
+              <span class="mdl-list__item-primary-content">
+                {#if !item.section}
+                  <div class="check-indicator">
+                    <i class="material-icons check-indicator-uncheck">
+                      check_box_outline_blank
+                    </i>
+                    <i class="material-icons check-indicator-checked">
+                      check_box
+                    </i>
+                  </div>
+                {/if}
+                <div class="item-content">
+                  {#if item.hover}
+                    <i
+                      class="mdl-icon-toggle__label material-icons button-sort">
+                      swap_vert
+                    </i>
+                  {/if}
+                  <span>{item.name}</span>
+                  {#if item.section && keyword.length}
+                    <button
+                      on:click={add}
+                      class="mdl-button mdl-js-button mdl-button--fab
+                      mdl-button--mini-fab mdl-button--colored">
+                      <i class="material-icons">add</i>
+                    </button>
+                  {/if}
+                  {#if item.hover}
+                    <button
+                      on:click={remove(items.indexOf(item))}
+                      class="mdl-button mdl-js-button mdl-button--icon
+                      mdl-button--colored button-delete">
+                      <i class="material-icons">delete</i>
+                    </button>
+                  {/if}
+                </div>
+              </span>
+            </li>
+          {/if}
+        {/each}
+      </ul>
+      <div class="action-bar">
+        <div class="mdl-textfield mdl-js-textfield">
+          <input
+            class="mdl-textfield__input"
+            type="text"
+            id="keyword"
+            bind:value={keyword}
+            on:input={onKeywordChange} />
+          <label class="mdl-textfield__label" for="keyword">
+            Item or #Section...
+          </label>
+        </div>
+        <button
+          on:click={clear}
+          class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons">clear</i>
+        </button>
+        <label
+          class="mdl-icon-toggle mdl-js-icon-toggle mdl-js-ripple-effect"
+          for="visibility"
+          use:addMaterialDesign>
+          <input
+            type="checkbox"
+            id="visibility"
+            class="mdl-icon-toggle__input"
+            bind:checked={displayAll} />
+          <i class="mdl-icon-toggle__label material-icons">visibility</i>
+        </label>
+      </div>
+    </div>
+  {/if}
 </div>
