@@ -220,7 +220,11 @@
             clear();
           }
 
-          li.classList.remove("display-check", "checked");
+          li.classList.remove("display-check");
+          if (!item.checked) {
+            li.classList.remove("checked");
+          }
+
           li.style.marginLeft = "0px";
         }
       } else if (hoverLi != null) {
