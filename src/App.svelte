@@ -1,5 +1,7 @@
 <script>
   import { onMount } from "svelte";
+  import { fade } from "svelte/transition";
+
   let db = null;
   let displaySettings = false;
   let accountKey = localStorage.getItem("accountKey") || "test";
@@ -368,7 +370,8 @@
               class="mdl-list__item"
               class:section={item.section}
               class:item={!item.section}
-              class:checked={item.checked}>
+              class:checked={item.checked}
+              transition:fade>
               <span class="mdl-list__item-primary-content">
                 {#if !item.section}
                   <div class="check-indicator">
