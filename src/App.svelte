@@ -123,7 +123,6 @@
   }
 
   onMount(() => {
-    registerTouchActions();
     window.addEventListener("load", event => {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
@@ -141,7 +140,8 @@
       });
     });
   });
-  function registerTouchActions() {
+
+  function registerTouchActions(list) {
     const CHECK_DISTANCE = 100;
     const DISPLAY_CHECK_DISTANCE = 25;
     let li = null;
@@ -151,7 +151,6 @@
     let isSwipe = false;
     let hoverLi = null;
 
-    const list = document.querySelector("ul");
     list.addEventListener("touchstart", handleStart);
     list.addEventListener("touchend", handleEnd);
     list.addEventListener("touchmove", handleMove);
@@ -361,7 +360,7 @@
   {/if}
   {#if !displaySettings}
     <div>
-      <ul class="mdl-list">
+      <ul class="mdl-list" use:registerTouchActions>
         {#each items as item, i}
           {#if isVisible(item)}
             <li
