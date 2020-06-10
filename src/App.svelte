@@ -150,12 +150,20 @@
     let item = null;
     let itemIndex = null;
     let startPosX = null;
-    let isSwipe = false;
+    let state = "";
     let hoverLi = null;
 
     list.addEventListener("touchstart", handleStart);
     list.addEventListener("touchend", handleEnd);
     list.addEventListener("touchmove", handleMove);
+
+    function onHold(item) {
+      if (state == "holding") {
+        state = "pressed";
+        item.hover = !item.hover;
+        items = items;
+      }
+    }
 
     function handleStart(e) {
       const target = e.target;
@@ -163,29 +171,34 @@
       itemIndex = li.getAttribute("data-index");
       item = items[itemIndex];
       if (target.innerText == "swap_vert") {
-        isSwipe = false;
+        state = "swap_vert";
       } else {
-        isSwipe = true;
+        state = "holding";
         startPosX = e.targetTouches[0].clientX;
+        setTimeout(onHold.bind(null, item), 1000);
       }
     }
 
     function handleMove(e) {
-      if (isSwipe && !item.section) {
+      if ((state == "holding" || state == "swipe") && !item.section) {
         const deltaX = e.changedTouches[0].clientX - startPosX;
 
-        const hasDisplayDistance = deltaX > DISPLAY_CHECK_DISTANCE;
+        const hasDisplayDistance = Math.abs(deltaX) > DISPLAY_CHECK_DISTANCE;
+        if (hasDisplayDistance) {
+          state = "swipe";
+        }
+
         li.classList.toggle("display-check", hasDisplayDistance);
         li.style.marginLeft = hasDisplayDistance ? deltaX + "px" : "0px";
 
         const checked = item.checked;
-        const hasCheckDistance = deltaX > CHECK_DISTANCE;
+        const hasCheckDistance = Math.abs(deltaX) > CHECK_DISTANCE;
 
         li.classList.toggle(
           "checked",
           (!checked && hasCheckDistance) || (checked && !hasCheckDistance)
         );
-      } else if (!isSwipe) {
+      } else if (state == "swap_vert") {
         e.preventDefault();
         const touch = e.changedTouches[0];
         const posY = touch.clientY;
@@ -207,14 +220,10 @@
     }
 
     function handleEnd(e) {
-      if (isSwipe) {
+      if (state == "swipe") {
         const deltaX = e.changedTouches[0].clientX - startPosX;
-
-        if (deltaX < -CHECK_DISTANCE) {
-          item.hover = !item.hover;
-          items = items;
-        } else if (!item.section) {
-          if (deltaX > CHECK_DISTANCE) {
+        if (!item.section) {
+          if (Math.abs(deltaX) > CHECK_DISTANCE) {
             item.checked = !item.checked;
             save(accountKey, items);
             clear();
@@ -227,7 +236,7 @@
 
           li.style.marginLeft = "0px";
         }
-      } else if (hoverLi != null) {
+      } else if (state == "swap_vert" && hoverLi != null) {
         let destinationIndex = parseInt(hoverLi.getAttribute("data-index"));
 
         if (destinationIndex < itemIndex) {
@@ -242,6 +251,8 @@
 
         save(accountKey, items);
       }
+
+      state = "released";
     }
   }
 
