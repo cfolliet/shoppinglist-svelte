@@ -156,6 +156,7 @@
     list.addEventListener("touchstart", handleStart);
     list.addEventListener("touchend", handleEnd);
     list.addEventListener("touchmove", handleMove);
+    list.addEventListener("contextmenu", e => e.preventDefault());
 
     function onHold(item) {
       if (state == "holding") {
@@ -175,7 +176,7 @@
       } else {
         state = "holding";
         startPosX = e.targetTouches[0].clientX;
-        setTimeout(onHold.bind(null, item), 1000);
+        setTimeout(onHold.bind(null, item), 2000);
       }
     }
 
@@ -262,6 +263,16 @@
 </script>
 
 <style>
+  .noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+  }
+
   #app {
     padding: 25px;
   }
@@ -376,7 +387,7 @@
     </div>
   {/if}
   {#if !displaySettings}
-    <div>
+    <div class="noselect">
       <ul class="mdl-list" use:registerTouchActions>
         {#each items as item, i}
           {#if isVisible(item)}
