@@ -152,6 +152,7 @@
     let startPosX = null;
     let state = "";
     let hoverLi = null;
+    let holdingTimeout = null;
 
     list.addEventListener("touchstart", handleStart);
     list.addEventListener("touchend", handleEnd);
@@ -176,7 +177,7 @@
       } else {
         state = "holding";
         startPosX = e.targetTouches[0].clientX;
-        setTimeout(onHold.bind(null, item), 2000);
+        holdingTimeout = setTimeout(onHold.bind(null, item), 2000);
       }
     }
 
@@ -221,6 +222,7 @@
     }
 
     function handleEnd(e) {
+      window.clearTimeout(holdingTimeout);
       if (state == "swipe") {
         const deltaX = e.changedTouches[0].clientX - startPosX;
         if (!item.section) {
